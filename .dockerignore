@@ -1,0 +1,11 @@
+data/
+tests/
+_build/
+__pycache__/
+*.pyc
+.venv/
+.git/
+README.md
+notebooks/
+requirements-dev.txt
+
