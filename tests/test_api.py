@@ -3,8 +3,11 @@ import json
 import unittest
 from pathlib import Path
 
+from unittest import mock
+
 from fastapi.testclient import TestClient
 
+from app import main as сервис
 from app.main import app
 
 КЛИЕНТ = TestClient(app)
@@ -33,6 +36,28 @@ class ТестЗдоровья(unittest.TestCase):
         тело = ответ.json()
         self.assertEqual(тело["status"], "ok")
         self.assertTrue(тело["model_loaded"])
+
+
+class ТестОтказов(unittest.TestCase):
+    def test_health_503_без_модели(self):
+        with mock.patch.dict(сервис.СОСТОЯНИЕ,
+                             {"модель": None, "мета": {}}):
+            ответ = КЛИЕНТ.get("/health")
+        self.assertEqual(ответ.status_code, 503)
+        self.assertEqual(ответ.json()["status"], "degraded")
+        self.assertFalse(ответ.json()["model_loaded"])
+
+    def test_predict_503_без_модели(self):
+        with mock.patch.dict(сервис.СОСТОЯНИЕ,
+                             {"модель": None, "мета": {}}):
+            ответ = КЛИЕНТ.post("/predict", json=ВАЛИДНЫЙ)
+        self.assertEqual(ответ.status_code, 503)
+
+    def test_predict_503_без_порога(self):
+        with mock.patch.dict(сервис.СОСТОЯНИЕ,
+                             {"мета": {"версия_модели": "x"}}):
+            ответ = КЛИЕНТ.post("/predict", json=ВАЛИДНЫЙ)
+        self.assertEqual(ответ.status_code, 503)
 
 
 class ТестПрогноза(unittest.TestCase):

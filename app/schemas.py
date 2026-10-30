@@ -60,9 +60,11 @@ class ПризнакиКлиента(BaseModel):
 class Прогноз(BaseModel):
     """Ответ сервиса."""
 
-    churn: int = Field(..., description="1 — риск ухода, 0 — нет")
-    probability: float = Field(..., description="вероятность ухода")
-    threshold: float = Field(..., description="порог отсечения")
+    churn: Literal[0, 1] = Field(..., description="1 — риск ухода, 0 — нет")
+    probability: float = Field(..., ge=0, le=1,
+                               description="вероятность ухода")
+    threshold: float = Field(..., gt=0, le=1,
+                             description="порог отсечения")
     model_version: str = Field(..., description="версия модели")
 
 
@@ -83,7 +85,7 @@ class СведенияОМодели(BaseModel):
     features: list[str]
     target: str
     threshold: float
-    metrics: dict
+    metrics: dict[str, float | int]
 
 
 class Ошибка(BaseModel):

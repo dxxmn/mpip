@@ -1,23 +1,26 @@
 # Учебный проект практики 4: команды одной строкой
-# Использование: make установка, make обучение, make тесты, make запуск
+# Использование: make установка, make обучение, make тесты, make проверка, make запуск
 
 PYTHON ?= python
 ОБРАЗ ?= churn-service
-ВЕРСИЯ ?= 1.0.0
+ВЕРСИЯ ?= 1.1.0
+ПРЕДЫДУЩАЯ_ВЕРСИЯ ?= 1.0.0
 
-.PHONY: установка установка-дев обучение тесты запуск остановка образ контейнер откат
+.PHONY: установка установка-дев обучение тесты проверка запуск остановка образ контейнер откат
 
 установка:
 	$(PYTHON) -m pip install -r requirements.txt
 
 установка-дев:
-	$(PYTHON) -m pip install -r requirements.txt -r requirements-dev.txt
+	$(PYTHON) -m pip install -r requirements-dev.txt
 
 обучение:
 	$(PYTHON) train.py
 
 тесты:
 	$(PYTHON) -m unittest discover -s tests -v
+
+проверка: обучение тесты
 
 запуск:
 	$(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port 8077
@@ -28,6 +31,9 @@ PYTHON ?= python
 контейнер:
 	docker run --rm -p 8077:8077 $(ОБРАЗ):$(ВЕРСИЯ)
 
+остановка:
+	-docker stop $$(docker ps -q --filter "ancestor=$(ОБРАЗ):$(ВЕРСИЯ)")
+
 откат:
-	@echo "Запускаем предыдущую версию $(ОБРАЗ):$(ВЕРСИЯ)"
-	docker run --rm -p 8077:8077 $(ОБРАЗ):$(ВЕРСИЯ)
+	@echo "Запускаем предыдущую версию $(ОБРАЗ):$(ПРЕДЫДУЩАЯ_ВЕРСИЯ)"
+	docker run --rm -p 8077:8077 $(ОБРАЗ):$(ПРЕДЫДУЩАЯ_ВЕРСИЯ)
